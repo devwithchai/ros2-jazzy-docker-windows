@@ -1,0 +1,13 @@
+.git
+.gitignore
+
+# ROS 2 build artifacts are generated locally and should not be sent to Docker build context.
+ros2_ws/build
+ros2_ws/install
+ros2_ws/log
+
+# Editor / OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
