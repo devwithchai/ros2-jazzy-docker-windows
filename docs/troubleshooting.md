@@ -640,3 +640,83 @@ rosdep check --from-paths src --ignore-src
 ```
 
 This makes troubleshooting substantially faster and avoids guessing.
+
+---
+
+## 20. Controlled reset procedure
+
+If the environment becomes confusing, use a controlled reset rather than randomly changing configuration.
+
+From WSL:
+
+```bash
+cd ~/ros2_jazzy_dev
+docker compose down
+```
+
+From PowerShell, if WSL itself is behaving badly:
+
+```powershell
+wsl --shutdown
+```
+
+Restart Docker Desktop, then:
+
+```powershell
+wsl
+```
+
+Back in WSL:
+
+```bash
+cd ~/ros2_jazzy_dev
+docker compose up -d
+docker compose exec ros2 bash
+```
+
+Verify:
+
+```bash
+echo $ROS_DISTRO
+whoami
+```
+
+Expected:
+
+```text
+jazzy
+ros
+```
+
+If the workspace itself is corrupted, clean only the generated build outputs first:
+
+```bash
+cd /ros2_ws
+rm -rf build install log
+```
+
+Then rebuild the required packages.
+
+---
+
+## 21. Rule of thumb
+
+When debugging, move from the outside in:
+
+```text
+1. Windows
+      |
+2. WSL 2
+      |
+3. Docker Desktop
+      |
+4. Container
+      |
+5. ROS 2
+      |
+6. RViz / Gazebo
+      |
+7. Your application
+```
+
+If the layer below is broken, debugging the layer above it is usually wasted effort.
