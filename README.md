@@ -1,39 +1,52 @@
 # ROS 2 Jazzy + RViz2 + Gazebo on Windows
 
-ROS 2 Jazzy + RViz2 + Gazebo on Windows using Docker, WSL 2 and WSLg — tested on an 8 GB RAM laptop with Intel integrated graphics.
+> **ROS 2 Jazzy + RViz2 + Gazebo on Windows using Docker, WSL 2 and WSLg — tested on an 8 GB RAM laptop with Intel integrated graphics.**
 
-> A practical, reproducible ROS 2 development environment for Windows users who want a Linux-first robotics workflow without dual-booting.
+[![ROS 2 Jazzy](https://img.shields.io/badge/ROS%202-Jazzy-blue)](https://docs.ros.org/en/jazzy/)
+[![Docker](https://img.shields.io/badge/Docker-Desktop-2496ED)](https://www.docker.com/products/docker-desktop/)
+[![WSL 2](https://img.shields.io/badge/Windows-WSL%202-4D4D4D)](https://learn.microsoft.com/windows/wsl/)
+[![RViz2](https://img.shields.io/badge/RViz2-Visualization-orange)](https://docs.ros.org/en/jazzy/p/rviz2/)
+[![Gazebo Harmonic](https://img.shields.io/badge/Gazebo-Harmonic-FF6F00)](https://gazebosim.org/)
 
-**Stack:** ROS 2 Jazzy · Docker Desktop · WSL 2 · WSLg · RViz2 · Gazebo Harmonic · Windows
+A practical, reproducible ROS 2 Jazzy development environment for **Windows 10/11** using **Docker Desktop + WSL 2 + WSLg**.
+
+This project focuses on a common problem: *How do I learn and develop with ROS 2 on a Windows laptop without installing a large robotics stack directly into Windows or owning a powerful GPU?*
+
+The setup was built and tested on a modest **8 GB RAM laptop with Intel integrated graphics and no dedicated graphics card**.
+
+---
 
 ## What this project provides
 
-This repository documents a field-tested Docker + WSL 2 setup for running ROS 2 Jazzy on Windows, including:
-
-- ROS 2 CLI, `colcon`, `rosdep` and common development tools
+- ROS 2 Jazzy CLI, `colcon`, `rosdep` and development tools
 - RViz2 with WSLg GUI forwarding
-- Gazebo Harmonic
+- Gazebo / Gazebo Harmonic integration
 - ROS ↔ Gazebo integration through `ros_gz`
-- A persistent ROS 2 workspace outside the container
-- A non-root development user with matching UID/GID
-- Hands-on validation of ROS 2 Topics, Services and Actions
-- Troubleshooting for Windows/WSL/Docker/GUI issues encountered during setup
+- `ros2_control` and common robot-description packages
+- Persistent ROS 2 workspace through a bind mount
+- Non-root development user with WSL UID/GID mapping
+- Hands-on validation of Topics, Services and Actions
+- Practical Windows/WSL/Docker/GUI troubleshooting
 
-## Tested baseline
+---
 
-| Component | Tested |
+## Hardware target
+
+| Component | Tested baseline |
 |---|---|
-| Windows | Windows 10/11 + WSL 2 |
+| OS | Windows 10/11 + WSL 2 |
 | RAM | **8 GB** |
 | Storage | **512 GB SSD** |
 | GPU | **Intel integrated graphics** |
 | Dedicated GPU | None |
-| Docker | Docker Desktop, Linux containers |
+| Container runtime | Docker Desktop, Linux containers |
 | ROS 2 | Jazzy |
 | Gazebo | Harmonic |
 | GUI | WSLg |
 
-This setup targets **learning and lightweight robotics development**. Large simulation worlds, high-resolution sensors, SLAM + Nav2 + Gazebo + RViz combinations, and ML workloads can require substantially more RAM/GPU capacity.
+This setup targets **learning and lightweight robotics development**. Large simulation worlds, high-resolution sensors, SLAM + Nav2 + Gazebo + RViz combinations, and ML workloads can require substantially more resources.
+
+---
 
 ## Architecture
 
@@ -51,8 +64,9 @@ Windows
         +-- ROS 2 Jazzy container
               +-- ROS 2 CLI
               +-- RViz2
-              +-- Gazebo Harmonic
+              +-- Gazebo
               +-- ros_gz
+              +-- ros2_control
               +-- colcon / rosdep
               +-- persistent workspace mount
 ```
@@ -61,24 +75,27 @@ The key design principle is:
 
 > **The container is disposable; your source workspace is persistent.**
 
-The ROS workspace lives in the WSL Linux filesystem and is bind-mounted into the container:
-
 ```text
 ~/ros2_jazzy_dev/ros2_ws
           |
           +---- bind mount ----> /ros2_ws
 ```
 
-This means the container can be rebuilt or removed without deleting your source code.
+> [Screenshot placeholder: overall Windows → WSL 2 → Docker → ROS 2 architecture]
+>
+> `<!-- Add screenshot here -->`
 
-## Quick start
+---
 
-### 1. Prerequisites
+# Quick start
+
+## 1. Prerequisites
 
 Install/enable:
 
-- Windows with WSL 2
-- Ubuntu running under WSL 2
+- Windows 10/11
+- WSL 2
+- Ubuntu under WSL 2
 - Docker Desktop for Windows
 - Docker Desktop WSL integration for Ubuntu
 
@@ -100,25 +117,29 @@ docker version
 docker info
 ```
 
-### 2. Enable Docker → WSL integration
+Detailed setup notes will live in `docs/windows-wsl2.md`.
 
-Docker Desktop:
+---
+
+## 2. Enable Docker → WSL integration
+
+In Docker Desktop:
 
 ```text
 Settings
-  -> Resources
-  -> WSL Integration
+  → Resources
+  → WSL Integration
 ```
 
-Enable:
+Enable integration with your Ubuntu WSL distribution.
 
-```text
-Enable integration with my default WSL distro
-```
+> [Screenshot placeholder: Docker Desktop WSL Integration settings]
+>
+> `<!-- Add screenshot here -->`
 
-and make sure your Ubuntu distro is enabled.
+---
 
-### 3. Create the development workspace
+## 3. Create the development workspace
 
 Inside Ubuntu/WSL:
 
@@ -127,11 +148,13 @@ mkdir -p ~/ros2_jazzy_dev/ros2_ws/src
 cd ~/ros2_jazzy_dev
 ```
 
-Keep the active ROS workspace under `~` rather than `/mnt/c/...` for a better Linux development experience.
+Prefer the WSL Linux filesystem (`~/...`) instead of `/mnt/c/...` for the active ROS workspace.
 
-### 4. Build the Docker environment
+---
 
-Place the repository's `Dockerfile` and `compose.yaml` in `~/ros2_jazzy_dev/`.
+## 4. Build the Docker environment
+
+Place `Dockerfile` and `compose.yaml` in `~/ros2_jazzy_dev/`.
 
 Then:
 
@@ -139,25 +162,67 @@ Then:
 docker compose build \
   --build-arg USER_UID=$(id -u) \
   --build-arg USER_GID=$(id -g)
+```
 
+Start the container:
+
+```bash
 docker compose up -d
 ```
 
-### 5. Enter the container
+Check it:
 
-From WSL, in `~/ros2_jazzy_dev`:
+```bash
+docker ps
+```
+
+Expected container name:
+
+```text
+mastering_ros2_jazzy
+```
+
+> [Screenshot placeholder: successful Docker build and `docker ps`]
+>
+> `<!-- Add screenshot here -->`
+
+---
+
+## 5. Enter the container
+
+From WSL, inside `~/ros2_jazzy_dev`:
 
 ```bash
 docker compose exec ros2 bash
 ```
 
-Or from any PowerShell window:
+Or from any PowerShell/WSL terminal:
 
 ```powershell
 docker exec -it mastering_ros2_jazzy bash
 ```
 
-Verify:
+### Important: image name vs container name
+
+Docker commands such as `docker exec` need the **container name**, not the image name.
+
+Check the actual running container with:
+
+```powershell
+docker ps
+```
+
+For this project the container is:
+
+```text
+mastering_ros2_jazzy
+```
+
+---
+
+## 6. Verify ROS 2
+
+Inside the container:
 
 ```bash
 whoami
@@ -171,9 +236,34 @@ ros
 jazzy
 ```
 
-## GUI validation
+Check core packages:
 
-### RViz2
+```bash
+ros2 pkg prefix rclcpp
+ros2 pkg prefix std_msgs
+ros2 pkg prefix rviz2
+ros2 pkg prefix ros_gz_sim
+ros2 pkg prefix ros_gz_bridge
+ros2 pkg prefix ros2_control
+```
+
+ROS-installed packages should resolve under:
+
+```text
+/opt/ros/jazzy
+```
+
+> [Screenshot placeholder: ROS 2 package verification]
+>
+> `<!-- Add screenshot here -->`
+
+---
+
+# GUI validation
+
+The compose configuration supports the WSLg GUI path used by this project.
+
+## RViz2
 
 Inside the container:
 
@@ -183,7 +273,13 @@ rviz2
 
 A normal RViz2 window should appear on the Windows desktop.
 
-### Gazebo Harmonic
+> [Screenshot placeholder: RViz2 running from Docker]
+>
+> `<!-- Add screenshot here -->`
+
+## Gazebo
+
+For a basic GUI smoke test:
 
 ```bash
 gz sim
@@ -198,84 +294,92 @@ ros2 pkg prefix ros_gz_bridge
 ros2 pkg prefix ros_gz_sim
 ```
 
-Expected prefix:
+> [Screenshot placeholder: Gazebo Harmonic running from Docker]
+>
+> `<!-- Add screenshot here -->`
+
+### Low-resource recommendation
+
+On an 8 GB machine:
+
+- Start with small Gazebo worlds.
+- Close unnecessary applications while simulating.
+- Avoid multiple simultaneous simulations.
+- Build only the ROS packages you need.
+- Prefer headless simulation when visualization is unnecessary.
+
+---
+
+# Build a ROS 2 workspace
+
+The bind-mounted workspace is:
 
 ```text
-/opt/ros/jazzy
+/ros2_ws
 ```
 
-## ROS 2 communication validation
-
-This project also validates the three core ROS 2 communication patterns with a custom example workspace.
-
-### Topics
-
-Publisher ↔ Topic ↔ Subscriber
-
-Example checks:
+List discovered packages:
 
 ```bash
-ros2 node list
-ros2 topic list
-ros2 topic info /custom_topic
-ros2 topic echo /custom_topic
-ros2 topic hz /custom_topic
+cd /ros2_ws
+colcon list
 ```
 
-Example custom interface:
-
-```text
-master_ros2_interface/msg/CustomMsg
-
-string data
-int32 number
-```
-
-### Services
-
-Client → Request → Server → Response
-
-Example:
+For large learning repositories, build a focused package and its dependencies:
 
 ```bash
-ros2 service list
-ros2 service type /concat_strings
-ros2 interface show master_ros2_interface/srv/ConcatStrings
+colcon build \
+  --symlink-install \
+  --packages-up-to <package_name>
 ```
 
-Call the service:
+Then:
 
 ```bash
-ros2 service call /concat_strings \
-  master_ros2_interface/srv/ConcatStrings \
-  "{str1: 'Hello ', str2: 'ROS 2'}"
+source /ros2_ws/install/setup.bash
 ```
 
-### Actions
-
-Client → Goal → Action Server → Feedback → Result
-
-Example:
+Verify:
 
 ```bash
-ros2 action list
-ros2 action info /my_custom_action
+ros2 pkg prefix <package_name>
 ```
 
-Send a goal with feedback:
+---
 
-```bash
-ros2 action send_goal /my_custom_action \
-  master_ros2_interface/action/MyCustomAction \
-  "{goal_value: 5}" \
-  --feedback
-```
+# ROS 2 communication validation
 
-## Packt Mastering ROS 2 repository
+This project validates the three core ROS 2 communication patterns.
 
-The environment was validated with the Packt Publishing course repository:
+| Mechanism | Pattern | Typical use |
+|---|---|---|
+| **Topic** | Publisher → Subscriber | Continuous/asynchronous data |
+| **Service** | Client → Request → Response | Short request/response |
+| **Action** | Goal → Feedback → Result | Long-running tasks |
 
-https://github.com/PacktPublishing/Mastering-ROS-2-for-Robotics-Programming
+The complete hands-on guide is in:
+
+**`docs/ros2-communication.md`**
+
+It includes:
+
+- custom `.msg`, `.srv` and `.action` interfaces
+- CLI inspection commands
+- C++ publisher/subscriber
+- C++ service client/server
+- C++ action client/server
+- expected output
+- troubleshooting
+
+> [Screenshot placeholder: Topics vs Services vs Actions]
+>
+> `<!-- Add screenshot here -->`
+
+---
+
+# Packt Mastering ROS 2 examples
+
+The environment was validated with the Packt Publishing *Mastering ROS 2 for Robotics Programming* repository.
 
 Clone it into the persistent workspace:
 
@@ -287,9 +391,11 @@ git clone \
   mastering_ros2
 ```
 
-The repository is organized by chapter. **Do not blindly build the entire repository** because multiple chapters contain packages with repeated names and different dependency sets.
+### Important: don't build everything blindly
 
-Prefer chapter/package-scoped builds such as:
+The upstream learning repository is organized by chapter and contains packages with repeated names and different dependency sets.
+
+Use a focused workflow:
 
 ```bash
 colcon list
@@ -305,100 +411,166 @@ colcon build \
 source install/setup.bash
 ```
 
-## Why this project exists
+This project successfully used this approach for Chapter 3 communication examples.
 
-ROS 2 is often learned on Linux, but many students have Windows laptops and cannot conveniently dual-boot or afford a dedicated robotics workstation.
+---
 
-This project aims to lower that barrier with a setup that is:
+# Troubleshooting
 
-- reproducible
-- transparent about trade-offs
-- friendly to low-resource hardware
-- useful for coursework and experimentation
-- easy to troubleshoot
+This repository is intentionally a **field guide**, not just an installation recipe.
 
-The goal is not to claim that Docker is the only correct ROS 2 setup. It is to provide a practical path for Windows users who want a Linux ROS 2 environment.
+Windows + WSL 2 + Docker + ROS 2 has several layers:
 
-## Troubleshooting
+```text
+Windows
+  │
+  ├── PowerShell
+  │
+  └── WSL 2
+       │
+       └── Docker CLI
+            │
+            └── Docker Desktop
+                 │
+                 └── ROS 2 container
+                      ├── DDS networking
+                      ├── bind mounts
+                      ├── user permissions
+                      └── WSLg GUI
+```
 
-The companion troubleshooting documentation captures issues encountered while building the environment, including:
+When something fails, first identify **which layer failed**.
 
-- Docker Desktop ↔ WSL integration failures
-- WSL shutdown/restart recovery
-- Docker memory/resource confusion
-- PowerShell vs Bash line continuation
+Issues documented/planned include:
+
+- Docker Desktop ↔ WSL integration
+- Docker memory/resource constraints
+- PowerShell vs Bash command syntax
 - Docker image vs container naming
-- `docker compose` working-directory issues
-- `/mnt/c` vs WSL Linux filesystem performance
-- NTFS mounting and permissions
-- WSLg `DISPLAY` / X11 socket debugging
+- running `docker compose` from the wrong directory
+- WSL Linux filesystem vs `/mnt/c`
+- bind-mounted workspace permissions
+- non-root UID/GID mapping
+- WSLg `DISPLAY` / X11 socket issues
 - RViz2 Qt/X11 errors
-- Intel integrated graphics and WSL graphics
-- root-owned files in bind-mounted workspaces
+- Intel integrated graphics
+- ROS 2 environment sourcing
+- package discovery and `colcon` build scope
+- DDS discovery between processes
 
-See `docs/troubleshooting.md` as the detailed reference develops.
+See the documentation under `docs/` as it develops.
 
-## Recommended project structure
+---
+
+# Why Docker?
+
+For a Windows learner, Docker provides a reproducible and isolated Linux-first ROS environment without requiring a native Windows ROS installation or dual boot.
+
+Benefits:
+
+- isolated dependencies
+- reproducible setup
+- easy environment reset
+- clean Windows host
+- shareable configuration
+
+Trade-offs:
+
+- GUI forwarding is more involved
+- filesystem and permissions need attention
+- Docker/WSL adds another layer to debug
+- simulation still consumes significant CPU/RAM
+
+This project documents those trade-offs rather than hiding them.
+
+---
+
+# Project structure
 
 ```text
 ros2-jazzy-docker-windows/
 ├── README.md
 ├── Dockerfile
 ├── compose.yaml
-├── .dockerignore
-├── LICENSE
+├── .gitignore
 ├── docs/
+│   ├── ros2-communication.md
 │   ├── troubleshooting.md
 │   ├── windows-wsl2.md
 │   ├── rviz2.md
 │   ├── gazebo.md
 │   └── low-end-hardware.md
-├── scripts/
-│   ├── build.sh
-│   ├── start.sh
-│   ├── shell.sh
-│   └── stop.sh
-└── examples/
-    └── ros2-communication/
-        ├── topics.md
-        ├── services.md
-        └── actions.md
+└── ros2_ws/
+    └── ...
 ```
 
-## Contributing
+Documentation files can be expanded as additional Windows-specific problems are reproduced and validated.
 
-If you find a Windows, WSL, Docker, graphics, RViz2 or Gazebo issue that is not covered here, please open an issue or pull request.
+---
 
-Useful diagnostics include:
+# Validation status
 
-```bash
-wsl --version
-wsl -l -v
-docker version
-docker info
+```text
+Docker image build                    ✓
+Container startup                    ✓
+Non-root ROS user                    ✓
+ROS_DISTRO=jazzy                     ✓
+ROS 2 core packages                  ✓
+RViz2 package                        ✓
+Gazebo ROS integration               ✓
+ros_gz_bridge                        ✓
+ros2_control                         ✓
+colcon workspace                     ✓
+Custom message                      ✓
+Topic communication                  ✓
+Service communication                ✓
+Action communication                 ✓
 ```
 
-and from Ubuntu:
+> [Screenshot placeholder: final validation montage — Docker + RViz2 + Gazebo + ROS 2 CLI]
+>
+> `<!-- Add screenshot here -->`
 
-```bash
-echo $DISPLAY
-echo $WAYLAND_DISPLAY
-ls -la /tmp/.X11-unix
-ls -l /dev/dxg
-```
+---
 
-Also include your Windows version, RAM, GPU, Docker Desktop version, ROS 2 distribution, and exact reproduction steps.
+# Contributing
 
-## References
+Found a Windows, WSL, Docker, graphics, RViz2, Gazebo or ROS 2 issue?
 
-- Docker Desktop + WSL 2: https://docs.docker.com/desktop/features/wsl/
-- Docker WSL development: https://docs.docker.com/desktop/features/wsl/use-wsl/
-- Windows WSL GUI applications: https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps
-- ROS 2 Jazzy: https://docs.ros.org/en/jazzy/
-- ROS Docker images: https://hub.docker.com/_/ros
+Please open an issue with:
+
+1. Windows version
+2. WSL version
+3. Docker Desktop version
+4. ROS 2 distribution
+5. RAM/GPU information
+6. Exact command used
+7. Complete error output
+8. Expected vs actual behavior
+
+Reproducible reports make it much easier to turn problems into reusable documentation.
+
+---
+
+# References
+
+- ROS 2 Jazzy documentation: https://docs.ros.org/en/jazzy/
+- Docker Desktop WSL: https://docs.docker.com/desktop/features/wsl/
+- Microsoft WSL GUI apps: https://learn.microsoft.com/en-us/windows/wsl/tutorials/gui-apps
 - Gazebo: https://gazebosim.org/
+- ROS Docker images: https://hub.docker.com/_/ros
 - Packt Mastering ROS 2 repository: https://github.com/PacktPublishing/Mastering-ROS-2-for-Robotics-Programming
 
-## License
+---
 
-Choose a license for this project after reviewing the licensing terms of the third-party materials referenced here, including the Packt course repository.
+# License
+
+Choose a license for this project after reviewing the licensing and attribution requirements of any third-party materials referenced or redistributed by the repository.
+
+---
+
+## Project goal
+
+> **Make ROS 2 development on an ordinary Windows laptop approachable, reproducible and understandable.**
+
+If this helps someone learn ROS 2 without needing a dedicated Linux workstation or high-end GPU, the project has done its job.
