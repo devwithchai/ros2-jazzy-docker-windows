@@ -563,12 +563,6 @@ Reproducible reports make it much easier to turn problems into reusable document
 
 ---
 
-# License
-
-Choose a license for this project after reviewing the licensing and attribution requirements of any third-party materials referenced or redistributed by the repository.
-
----
-
 ## Project goal
 
 > **Make ROS 2 development on an ordinary Windows laptop approachable, reproducible and understandable.**
