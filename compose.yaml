@@ -1,0 +1,29 @@
+services:
+  ros2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_UID: ${USER_UID:-1001}
+        USER_GID: ${USER_GID:-1001}
+        USERNAME: ${USERNAME:-ros}
+
+    container_name: mastering_ros2_jazzy
+
+    stdin_open: true
+    tty: true
+
+    network_mode: host
+    ipc: host
+
+    environment:
+      DISPLAY: ${DISPLAY}
+      QT_X11_NO_MITSHM: "1"
+      XDG_RUNTIME_DIR: /tmp/runtime-ros
+      ROS_DISTRO: jazzy
+
+    volumes:
+      - ./ros2_ws:/ros2_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+    working_dir: /ros2_ws
